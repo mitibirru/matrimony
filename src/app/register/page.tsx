@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { siteConfig } from "@/config/site";
 import {
   Mail, Phone, ChevronLeft, Loader2, Lock, Eye, EyeOff,
@@ -14,7 +14,7 @@ function FloatingOrbs() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(5)].map((_, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute rounded-full"
           style={{
@@ -27,34 +27,20 @@ function FloatingOrbs() {
             left: `${(i * 22 + 10) % 80}%`,
             top: `${(i * 20 + 5) % 70}%`,
           }}
-          animate={{
-            y: [0, -25 - i * 4, 0, 25 + i * 4, 0],
-            x: [0, 12, 0, -12, 0],
-            scale: [1, 1.08, 1, 0.92, 1],
-          }}
-          transition={{
-            duration: 12 + i * 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
         />
       ))}
     </div>
   );
 }
 
-function FeatureItem({ icon: Icon, title, desc, delay }: {
+function FeatureItem({ icon: Icon, title, desc }: {
   icon: React.ElementType;
   title: string;
   desc: string;
-  delay: number;
 }) {
   return (
-    <motion.div
+    <div
       className="flex items-start gap-3"
-      initial={{ opacity: 0, x: -15 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay }}
     >
       <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
         <Icon className="w-5 h-5 text-white" />
@@ -63,7 +49,7 @@ function FeatureItem({ icon: Icon, title, desc, delay }: {
         <p className="text-sm font-bold text-white">{title}</p>
         <p className="text-xs text-white/50 font-medium mt-0.5">{desc}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -128,21 +114,13 @@ export default function RegisterPage() {
         <FloatingOrbs />
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
           <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <div>
               <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-bold mb-16">
                 <ChevronLeft className="w-4 h-4" /> Back to home
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <div>
               <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
                 Begin your
                 <br />
@@ -151,19 +129,16 @@ export default function RegisterPage() {
               <p className="text-white/60 text-lg font-medium max-w-sm leading-relaxed">
                 Create your free account and start connecting with verified profiles from your community.
               </p>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.div
+          <div
             className="space-y-5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
           >
-            <FeatureItem icon={Shield} title="100% Verified Profiles" desc="Every profile is manually reviewed" delay={0.7} />
-            <FeatureItem icon={Zap} title="AI-Powered Matching" desc="Smart recommendations based on your preferences" delay={0.8} />
-            <FeatureItem icon={Heart} title="Family-Friendly Platform" desc="Designed for both parents and youth" delay={0.9} />
-          </motion.div>
+            <FeatureItem icon={Shield} title="100% Verified Profiles" desc="Every profile is manually reviewed" />
+            <FeatureItem icon={Zap} title="AI-Powered Matching" desc="Smart recommendations based on your preferences" />
+            <FeatureItem icon={Heart} title="Family-Friendly Platform" desc="Designed for both parents and youth" />
+          </div>
         </div>
       </div>
 
@@ -174,32 +149,25 @@ export default function RegisterPage() {
         <div className="w-full max-w-[440px] relative z-10">
 
           {/* Mobile back link */}
-          <motion.div
+          <div
             className="lg:hidden mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
           >
             <Link href="/" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-foreground transition-colors group">
               <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
               Back to home
             </Link>
-          </motion.div>
+          </div>
 
           {/* Header */}
-          <motion.div
+          <div
             className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <motion.div
+              <div
                 className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center"
-                animate={{ rotate: [0, -5, 5, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
               >
                 <Heart className="w-5 h-5 text-secondary" />
-              </motion.div>
+              </div>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
               Create an account
@@ -207,35 +175,27 @@ export default function RegisterPage() {
             <p className="mt-2 text-muted-foreground font-medium text-base">
               Join <span className="text-primary font-bold">{siteConfig.name}</span> to find your perfect match
             </p>
-          </motion.div>
+          </div>
 
           {/* Error */}
-          <AnimatePresence>
+          
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+              <div
                 className="mb-6"
               >
                 <div className="p-4 bg-destructive/10 border-2 border-destructive/20 rounded-2xl text-sm font-bold text-destructive">
                   {error}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           <div className="space-y-5">
 
             {/* Google Auth */}
-            <motion.button
+            <button
               type="button"
               className="w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-card text-foreground font-bold text-[15px] border-2 border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -244,29 +204,23 @@ export default function RegisterPage() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
               Sign up with Google
-            </motion.button>
+            </button>
 
             {/* Divider */}
-            <motion.div
+            <div
               className="relative flex items-center py-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
             >
               <div className="grow border-t border-border" />
               <span className="shrink-0 px-4 text-xs font-black text-muted-foreground uppercase tracking-widest">Or</span>
               <div className="grow border-t border-border" />
-            </motion.div>
+            </div>
 
             {/* Segmented Control */}
-            <motion.div
+            <div
               className="flex p-1 bg-muted/50 rounded-2xl border border-border relative"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
             >
               {(["email", "phone"] as const).map(method => (
-                <motion.button
+                <button
                   key={method}
                   onClick={() => setAuthMethod(method)}
                   type="button"
@@ -275,23 +229,19 @@ export default function RegisterPage() {
                       ? "bg-card text-foreground shadow-md"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
-                  whileTap={{ scale: 0.97 }}
                 >
                   {method === "email" ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                   {method === "email" ? "Email" : "Phone"}
-                </motion.button>
+                </button>
               ))}
-            </motion.div>
+            </div>
 
             {/* Form */}
             <form className="space-y-4" onSubmit={handleSubmit}>
 
               {/* Full Name */}
-              <motion.div
+              <div
                 className="space-y-1.5"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
               >
                 <label htmlFor="name" className="block text-sm font-black text-foreground px-1">
                   Full Name
@@ -312,17 +262,13 @@ export default function RegisterPage() {
                     placeholder="e.g. Priya Deshmukh"
                   />
                 </div>
-              </motion.div>
+              </div>
 
               {/* Email or Phone */}
-              <AnimatePresence mode="wait">
+              
                 {authMethod === "email" ? (
-                  <motion.div
+                  <div
                     key="email"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
                     className="space-y-1.5"
                   >
                     <label htmlFor="email" className="block text-sm font-black text-foreground px-1">
@@ -342,14 +288,10 @@ export default function RegisterPage() {
                         placeholder="name@example.com"
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
+                  <div
                     key="phone"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
                     className="space-y-1.5"
                   >
                     <label htmlFor="phone" className="block text-sm font-black text-foreground px-1">
@@ -371,16 +313,13 @@ export default function RegisterPage() {
                         placeholder="98765 43210"
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              
 
               {/* Password */}
-              <motion.div
+              <div
                 className="space-y-2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
               >
                 <label htmlFor="password" className="block text-sm font-black text-foreground px-1">
                   Password
@@ -410,56 +349,44 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Password Strength */}
-                <AnimatePresence>
+                
                   {(password.length > 0 || focusedField === "password") && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
+                    <div
                       className="space-y-2 pt-1"
                     >
                       <div className="flex gap-1.5">
                         {[1, 2, 3].map(i => (
-                          <motion.div
+                          <div
                             key={i}
                             className={`h-1.5 flex-1 rounded-full transition-colors ${
                               passwordStrength >= i
                                 ? i === 1 ? "bg-red-400" : i === 2 ? "bg-yellow-400" : "bg-green-400"
                                 : "bg-border"
                             }`}
-                            initial={{ scaleX: 0 }}
-                            animate={{ scaleX: 1 }}
-                            transition={{ delay: i * 0.1 }}
                           />
                         ))}
                       </div>
                       <div className="space-y-1">
                         {PASSWORD_RULES.map((rule, i) => (
-                          <motion.div
+                          <div
                             key={i}
                             className="flex items-center gap-2 text-xs font-semibold"
-                            initial={{ opacity: 0, x: -5 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.05 }}
                           >
                             <CheckCircle2 className={`w-3 h-3 ${rule.test(password) ? "text-green-500" : "text-muted-foreground/40"}`} />
                             <span className={rule.test(password) ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
                               {rule.label}
                             </span>
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-              </motion.div>
+                
+              </div>
 
               {/* Terms */}
-              <motion.div
+              <div
                 className="px-1 pt-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
               >
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                   By signing up, you agree to our{" "}
@@ -467,17 +394,12 @@ export default function RegisterPage() {
                   {" "}and{" "}
                   <Link href="/privacy" className="font-bold text-primary hover:underline">Privacy Policy</Link>.
                 </p>
-              </motion.div>
+              </div>
 
-              <motion.button
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-2xl text-base font-black text-white bg-linear-to-r from-secondary to-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-70 transition-all mt-2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
-                whileHover={{ y: -2, scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
               >
                 {isLoading ? (
                   <>
@@ -490,21 +412,16 @@ export default function RegisterPage() {
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
-              </motion.button>
+              </button>
             </form>
           </div>
 
-          <motion.p
-            className="text-center text-sm font-medium text-muted-foreground mt-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
-          >
+          <p className="text-center text-sm font-medium text-muted-foreground mt-8">
             Already have an account?{" "}
             <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
               Sign in
             </Link>
-          </motion.p>
+          </p>
         </div>
       </div>
     </div>

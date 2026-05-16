@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { siteConfig } from "@/config/site";
 import {
   Mail, Phone, ChevronLeft, Loader2, CheckCircle2,
@@ -15,7 +15,7 @@ function FloatingOrbs() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(5)].map((_, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute rounded-full"
           style={{
@@ -28,16 +28,6 @@ function FloatingOrbs() {
             left: `${(i * 25) % 80}%`,
             top: `${(i * 18) % 70}%`,
           }}
-          animate={{
-            y: [0, -20 - i * 5, 0, 20 + i * 5, 0],
-            x: [0, 15, 0, -15, 0],
-            scale: [1, 1.1, 1, 0.9, 1],
-          }}
-          transition={{
-            duration: 10 + i * 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
         />
       ))}
     </div>
@@ -46,16 +36,14 @@ function FloatingOrbs() {
 
 function TrustBadge({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <motion.div
+    <div
       className="flex items-center gap-2 text-white/70"
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
     >
       <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
         <Icon className="w-4 h-4" />
       </div>
       <span className="text-sm font-semibold">{text}</span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -112,21 +100,13 @@ function LoginForm() {
         <FloatingOrbs />
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
           <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <div>
               <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-bold mb-16">
                 <ChevronLeft className="w-4 h-4" /> Back to home
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <div>
               <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
                 Find your
                 <br />
@@ -135,19 +115,16 @@ function LoginForm() {
               <p className="text-white/60 text-lg font-medium max-w-sm leading-relaxed">
                 Thousands of families trust {siteConfig.name} to find meaningful, lasting alliances.
               </p>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.div
+          <div
             className="space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
           >
             <TrustBadge icon={Shield} text="Verified profiles only" />
             <TrustBadge icon={Users} text="10,000+ families trust us" />
             <TrustBadge icon={Heart} text="500+ successful alliances" />
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -158,32 +135,25 @@ function LoginForm() {
         <div className="w-full max-w-[440px] relative z-10">
 
           {/* Mobile back link */}
-          <motion.div
+          <div
             className="lg:hidden mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
           >
             <Link href="/" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-foreground transition-colors group">
               <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
               Back to home
             </Link>
-          </motion.div>
+          </div>
 
           {/* Header */}
-          <motion.div
+          <div
             className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <motion.div
+              <div
                 className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
               >
                 <Sparkles className="w-5 h-5 text-primary" />
-              </motion.div>
+              </div>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
               Welcome back
@@ -191,15 +161,12 @@ function LoginForm() {
             <p className="mt-2 text-muted-foreground font-medium text-base">
               Sign in to your <span className="text-primary font-bold">{siteConfig.name}</span> account
             </p>
-          </motion.div>
+          </div>
 
           {/* Success Message */}
-          <AnimatePresence>
+          
             {registered && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+              <div
                 className="mb-6"
               >
                 <div className="p-4 bg-green-50 dark:bg-green-500/10 border-2 border-green-200 dark:border-green-500/20 rounded-2xl flex items-start gap-3">
@@ -208,37 +175,29 @@ function LoginForm() {
                     Account created! Please sign in with your credentials.
                   </p>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           {/* Error */}
-          <AnimatePresence>
+          
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+              <div
                 className="mb-6"
               >
                 <div className="p-4 bg-destructive/10 border-2 border-destructive/20 rounded-2xl text-sm font-bold text-destructive">
                   {error}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           <div className="space-y-5">
 
             {/* Google Auth */}
-            <motion.button
+            <button
               type="button"
               className="w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-card text-foreground font-bold text-[15px] border-2 border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -247,29 +206,23 @@ function LoginForm() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
               Continue with Google
-            </motion.button>
+            </button>
 
             {/* Divider */}
-            <motion.div
+            <div
               className="relative flex items-center py-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
             >
               <div className="grow border-t border-border" />
               <span className="shrink-0 px-4 text-xs font-black text-muted-foreground uppercase tracking-widest">Or</span>
               <div className="grow border-t border-border" />
-            </motion.div>
+            </div>
 
             {/* Segmented Control */}
-            <motion.div
+            <div
               className="flex p-1 bg-muted/50 rounded-2xl border border-border relative"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
             >
               {(["email", "phone"] as const).map(method => (
-                <motion.button
+                <button
                   key={method}
                   onClick={() => setAuthMethod(method)}
                   type="button"
@@ -278,24 +231,19 @@ function LoginForm() {
                       ? "bg-card text-foreground shadow-md"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
-                  whileTap={{ scale: 0.97 }}
                 >
                   {method === "email" ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                   {method === "email" ? "Email" : "Phone"}
-                </motion.button>
+                </button>
               ))}
-            </motion.div>
+            </div>
 
             {/* Form */}
             <form className="space-y-4" onSubmit={handleSubmit}>
-              <AnimatePresence mode="wait">
+              
                 {authMethod === "email" ? (
-                  <motion.div
+                  <div
                     key="email"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
                     className="space-y-1.5"
                   >
                     <label htmlFor="email" className="block text-sm font-black text-foreground px-1">
@@ -315,14 +263,10 @@ function LoginForm() {
                         placeholder="name@example.com"
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
+                  <div
                     key="phone"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
                     className="space-y-1.5"
                   >
                     <label htmlFor="phone" className="block text-sm font-black text-foreground px-1">
@@ -344,15 +288,12 @@ function LoginForm() {
                         placeholder="98765 43210"
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              
 
-              <motion.div
+              <div
                 className="space-y-1.5"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
               >
                 <label htmlFor="password" className="block text-sm font-black text-foreground px-1">
                   Password
@@ -378,13 +319,10 @@ function LoginForm() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div
+              <div
                 className="flex items-center justify-between px-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
               >
                 <label className="flex items-center gap-2.5 cursor-pointer group select-none">
                   <div className="relative flex items-center justify-center w-5 h-5 rounded-md border-2 border-border group-hover:border-primary transition-colors">
@@ -396,17 +334,12 @@ function LoginForm() {
                 <a href="#" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors">
                   Forgot password?
                 </a>
-              </motion.div>
+              </div>
 
-              <motion.button
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-2xl text-base font-black text-white bg-linear-to-r from-primary to-secondary shadow-lg shadow-secondary/20 hover:shadow-xl hover:shadow-secondary/30 disabled:opacity-70 transition-all mt-2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                whileHover={{ y: -2, scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
               >
                 {isLoading ? (
                   <>
@@ -419,21 +352,16 @@ function LoginForm() {
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
-              </motion.button>
+              </button>
             </form>
           </div>
 
-          <motion.p
-            className="text-center text-sm font-medium text-muted-foreground mt-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
+          <p className="text-center text-sm font-medium text-muted-foreground mt-8">
             Don&apos;t have an account?{" "}
             <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
               Create an account
             </Link>
-          </motion.p>
+          </p>
         </div>
       </div>
     </div>

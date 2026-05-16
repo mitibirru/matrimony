@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { User, Settings, LogOut, ChevronDown, Heart } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, Heart, Edit3 } from "lucide-react";
 
 interface UserNavProps {
   user: {
@@ -63,6 +63,14 @@ export function UserNav({ user }: UserNavProps) {
             >
               <User className="h-4 w-4" />
               My Profile
+            </Link>
+            <Link 
+              href="/dashboard/edit-profile" 
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted hover:text-primary rounded-xl transition-colors"
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit Profile
             </Link>
             <Link 
               href="/matches" 
