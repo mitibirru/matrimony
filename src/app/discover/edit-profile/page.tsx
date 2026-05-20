@@ -17,7 +17,7 @@ export default async function EditProfilePage() {
   await dbConnect();
   const profile = await Profile.findOne({ user: session.user.id }).lean();
 
-  if (!profile) redirect("/dashboard");
+  if (!profile) redirect("/discover");
 
   const serializedProfile = JSON.parse(JSON.stringify(profile));
 

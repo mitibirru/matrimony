@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import Link from "next/link";
 import {
   User, Star, Users, Briefcase, MapPin, Camera, ChevronLeft,
   Check, ChevronDown, Search, CalendarIcon, Loader2, Save, ArrowLeft
@@ -32,12 +31,12 @@ function DropdownPicker({ value, options, onSelect, placeholder = "Select..." }:
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" className="w-full h-11 justify-between rounded-xl px-4 text-sm font-medium border hover:border-primary/50">
+        <Button variant="outline" role="combobox" className="w-full h-11 justify-between rounded-xl px-4 text-sm font-medium border hover:border-primary/50 hover:shadow-sm transition-all duration-200">
           <span className={selectedLabel ? "text-foreground" : "text-muted-foreground"}>{selectedLabel || placeholder}</span>
-          <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl animate-scale-in" align="start">
         {options.length > 4 && (
           <div className="p-2 border-b border-border">
             <div className="relative">
@@ -46,13 +45,13 @@ function DropdownPicker({ value, options, onSelect, placeholder = "Select..." }:
             </div>
           </div>
         )}
-        <div className="max-h-52 overflow-y-auto p-1.5">
+        <div className="max-h-52 overflow-y-auto p-1.5 dropdown-stagger">
           {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-3">No results</p>}
           {filtered.map(opt => (
             <button key={opt.value} onClick={() => { onSelect(opt.value); setOpen(false); setSearch(""); }}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${value === opt.value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"}`}>
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${value === opt.value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted hover:translate-x-0.5"}`}>
               <span>{opt.label}</span>
-              {value === opt.value && <Check className="w-4 h-4 text-primary" />}
+              {value === opt.value && <Check className="w-4 h-4 text-primary animate-check-pop" />}
             </button>
           ))}
         </div>
@@ -63,11 +62,18 @@ function DropdownPicker({ value, options, onSelect, placeholder = "Select..." }:
 
 // ────── Reusable: Chip Selector ──────
 function ChipSelector({ options, value, onSelect }: { options: string[]; value: string; onSelect: (val: string) => void }) {
+  const [justSelected, setJustSelected] = useState("");
+  const handleSelect = (opt: string) => { onSelect(opt); setJustSelected(opt); setTimeout(() => setJustSelected(""), 250); };
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2.5">
       {options.map(opt => (
-        <Button key={opt} type="button" variant={value === opt ? "default" : "outline"} size="sm" onClick={() => onSelect(opt)}
-          className={`rounded-xl h-9 px-4 text-sm font-semibold transition-all ${value === opt ? "shadow-md shadow-primary/20" : "hover:border-primary/40"}`}>
+        <Button key={opt} type="button" variant={value === opt ? "default" : "outline"} size="sm"
+          onClick={() => handleSelect(opt)}
+          className={`rounded-xl h-10 px-5 text-sm font-semibold transition-all duration-200
+            ${value === opt ? "shadow-md shadow-primary/20 scale-[1.03]" : "hover:border-primary/40 hover:shadow-sm"}
+            ${justSelected === opt ? "animate-pop" : ""}`}>
+          {value === opt && <Check className="w-3.5 h-3.5 mr-1.5 animate-check-pop" />}
           {opt}
         </Button>
       ))}
@@ -176,9 +182,9 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl"><ArrowLeft className="w-5 h-5" /></Button>
-          </Link>
+          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => router.back()}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">Edit Profile</h1>
             <p className="text-xs text-muted-foreground font-medium">ID: {profile.profileId}</p>
@@ -210,7 +216,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: Basic Info ──── */}
         <TabsContent value="basic">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">Basic Information</CardTitle><CardDescription className="text-sm">Your personal details</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">
@@ -252,7 +258,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: Religion ──── */}
         <TabsContent value="religion">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">Religion & Community</CardTitle><CardDescription className="text-sm">Your cultural background</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">
@@ -283,7 +289,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: Family ──── */}
         <TabsContent value="family">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">Family Details</CardTitle><CardDescription className="text-sm">Tell us about your family</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">
@@ -306,7 +312,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: Career ──── */}
         <TabsContent value="career">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">Education & Career</CardTitle><CardDescription className="text-sm">Your professional background</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">
@@ -332,7 +338,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: Location ──── */}
         <TabsContent value="location">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">Location & Lifestyle</CardTitle><CardDescription className="text-sm">Where you live and your habits</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">
@@ -354,7 +360,7 @@ export default function EditProfileForm({ profile }: { profile: Record<string, a
 
         {/* ──── TAB: About & Photos ──── */}
         <TabsContent value="about">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl shadow-sm animate-fade-up">
             <CardHeader className="py-5"><CardTitle className="text-base font-bold">About & Photos</CardTitle><CardDescription className="text-sm">Your bio and profile photos</CardDescription></CardHeader>
             <Separator />
             <CardContent className="pt-6 space-y-5">

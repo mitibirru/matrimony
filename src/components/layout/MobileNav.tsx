@@ -23,7 +23,7 @@ const NAV_LINKS = [
 ];
 
 const USER_LINKS = [
-  { href: "/dashboard", label: "My Profile", icon: User },
+  { href: "/profile", label: "My Profile", icon: User },
   { href: "/matches", label: "My Matches", icon: Heart },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

@@ -82,7 +82,7 @@ function LoginForm() {
       if (res?.error) {
         setError(res.error);
       } else {
-        router.push("/dashboard");
+        router.push("/discover");
         router.refresh();
       }
     } catch {
