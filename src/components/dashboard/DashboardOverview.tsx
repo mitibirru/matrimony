@@ -194,8 +194,8 @@ function UserProfileSidebar({ profile, age }: { profile: Record<string, unknown>
             </div>
           ))}
         </div>
-        <Link href="/dashboard/edit-profile" className="w-full mt-5 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary/15 hover:shadow-sm active:scale-[0.97] transition-all duration-200">
-          <Edit3 className="w-4 h-4" /> Edit Profile
+        <Link href="/profile" className="w-full mt-5 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary/15 hover:shadow-sm active:scale-[0.97] transition-all duration-200">
+          <UserCircle className="w-4 h-4" /> View Profile
         </Link>
       </div>
     </div>

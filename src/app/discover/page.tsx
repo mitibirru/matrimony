@@ -6,7 +6,12 @@ import Profile from "@/models/Profile";
 import ProfileWizard from "@/components/dashboard/ProfileWizard";
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
 
-export default async function DashboardPage() {
+export const metadata = {
+  title: "Discover | PremaJodi",
+  description: "Discover compatible profiles and find your perfect match",
+};
+
+export default async function DiscoverPage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {

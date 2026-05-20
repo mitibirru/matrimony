@@ -14,7 +14,7 @@ export default async function Header() {
       <div className="container flex h-16 sm:h-20 items-center justify-between">
         
         {/* Logo Section */}
-        <Link href={session ? "/dashboard" : "/"} className="flex items-center space-x-2 sm:space-x-3 group">
+        <Link href={session ? "/discover" : "/"} className="flex items-center space-x-2 sm:space-x-3 group">
           <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 sm:h-6 sm:w-6"><circle cx="8" cy="12" r="5"/><circle cx="16" cy="12" r="5"/></svg>
           </div>

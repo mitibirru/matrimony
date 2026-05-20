@@ -16,7 +16,7 @@ export default function EliteMatrimonyPage() {
 
         <div className="container relative z-10 flex flex-col items-center text-center space-y-5 sm:space-y-8 max-w-4xl px-4">
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent/10 border border-accent/20 text-accent font-bold tracking-widest uppercase text-xs sm:text-sm mb-2 sm:mb-4">
-            <Diamond className="h-3 w-3 sm:h-4 sm:w-4 fill-current" /> By Invitation Only
+            <Diamond className="h-3 w-3 sm:h-4 sm:w-4 fill-current" /> Coming Soon
           </div>
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
             Exclusive Matchmaking for the <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-[#ffeb99]">Exceptional</span>.
