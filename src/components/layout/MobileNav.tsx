@@ -77,6 +77,7 @@ export function MobileNav({ isLoggedIn, user }: MobileNavProps) {
             </div>
           )}
 
+          {!isLoggedIn && (
           <nav className="p-4 space-y-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-3 mb-2">Navigate</p>
             {NAV_LINKS.map((link) => {
@@ -91,6 +92,7 @@ export function MobileNav({ isLoggedIn, user }: MobileNavProps) {
               );
             })}
           </nav>
+          )}
 
           {isLoggedIn && (
             <nav className="p-4 pt-0 space-y-1">

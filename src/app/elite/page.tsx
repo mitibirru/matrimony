@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { siteConfig } from "@/config/site";
 import { Diamond, ShieldCheck, UserCheck, PhoneCall, Star, Lock, Users, Sparkles } from "lucide-react";
 import Link from "next/link";

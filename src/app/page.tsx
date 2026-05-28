@@ -1,14 +1,16 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Search, Heart, ShieldCheck, Diamond, Star, UserPlus, MessageCircle, Sparkles, MapPin, Users, Briefcase, ChevronRight, BadgeCheck, Globe, BookOpen, ArrowRight } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { siteConfig } from "@/config/site";
 import { HeroSearch } from "@/components/HeroSearch";
-import { BrowseCategories } from "@/components/home/BrowseCategories";
-import { TrustCounters } from "@/components/home/TrustCounters";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
+
+const BrowseCategories = dynamic(() => import("@/components/home/BrowseCategories").then(m => m.BrowseCategories), { ssr: true });
+const TrustCounters = dynamic(() => import("@/components/home/TrustCounters").then(m => m.TrustCounters), { ssr: true });
 
 export default async function Home() {
   const session = await getServerSession(authOptions);

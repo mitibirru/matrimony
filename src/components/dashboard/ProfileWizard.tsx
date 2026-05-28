@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import {
   ChevronRight, ChevronLeft, Loader2, CheckCircle2,
   Heart, Star, Briefcase, PenLine, ChevronDown, Check,
-  Search, CalendarIcon, Users, MapPin, Sparkles
+  Search, CalendarIcon, Users, MapPin, Sparkles, Phone
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,43 @@ export default function ProfileWizard({ userId }: { userId: string }) {
   const [slideDir, setSlideDir] = useState<"right" | "left">("right");
   const [stepKey, setStepKey] = useState(0);
 
+  // Phone OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleSendOTP = async () => {
+    const cleaned = formData.phone.replace(/\s/g, "");
+    if (cleaned.length < 10) { setOtpError("Enter a valid 10-digit number"); return; }
+    setOtpLoading(true); setOtpError("");
+    try {
+      const { auth, RecaptchaVerifier, signInWithPhoneNumber } = await import("@/lib/firebase");
+      if (!(window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-wizard", { size: "invisible" });
+      }
+      const result = await signInWithPhoneNumber(auth, `+91${cleaned}`, (window as any).recaptchaVerifier);
+      setConfirmationResult(result);
+      setOtpSent(true);
+    } catch (err: any) {
+      setOtpError(err.message || "Failed to send OTP");
+      if ((window as any).recaptchaVerifier) { (window as any).recaptchaVerifier.clear(); (window as any).recaptchaVerifier = null; }
+    } finally { setOtpLoading(false); }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otp.length < 6) { setOtpError("Enter the 6-digit OTP"); return; }
+    setOtpLoading(true); setOtpError("");
+    try {
+      await confirmationResult.confirm(otp);
+      setPhoneVerified(true);
+    } catch {
+      setOtpError("Invalid OTP. Please try again.");
+    } finally { setOtpLoading(false); }
+  };
+
   const [formData, setFormData] = useState({
     profileFor: "", gender: "", dateOfBirth: "", maritalStatus: "",
     height: 170, bodyType: "", diet: "",
@@ -179,6 +216,7 @@ export default function ProfileWizard({ userId }: { userId: string }) {
     city: "", state: "", country: "India", nativePlace: "",
     smoking: "No", drinking: "No",
     about: "",
+    phone: "",
   });
 
   const updateField = (field: string, value: string | number) => setFormData(prev => ({ ...prev, [field]: value }));
@@ -228,6 +266,8 @@ export default function ProfileWizard({ userId }: { userId: string }) {
         return null;
       case 6:
         if (!formData.about || formData.about.length < 50) return "Please write at least 50 characters about yourself.";
+        if (!formData.phone || formData.phone.replace(/\s/g, "").length < 10) return "Please enter your mobile number.";
+        if (!phoneVerified) return "Please verify your mobile number with OTP.";
         return null;
       default:
         return null;
@@ -544,7 +584,7 @@ export default function ProfileWizard({ userId }: { userId: string }) {
               </>
             )}
 
-            {/* ── STEP 6: About Me ── */}
+            {/* ── STEP 6: About Me & Phone ── */}
             {step === 6 && (
               <>
                 <div className="space-y-2">
@@ -557,6 +597,64 @@ export default function ProfileWizard({ userId }: { userId: string }) {
                     <span className={`text-[11px] font-bold transition-colors duration-300 ${formData.about.length >= 50 ? "text-green-600" : "text-muted-foreground"}`}>{formData.about.length} chars</span>
                   </div>
                 </div>
+
+                <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+                  <FieldLabel>Mobile Number {phoneVerified && <Badge className="bg-green-500 text-white text-[10px] ml-1">✓ Verified</Badge>}</FieldLabel>
+                  <div className="flex gap-2">
+                    <div className="flex flex-1">
+                      <span className="inline-flex items-center gap-1.5 px-3.5 rounded-l-xl border-2 border-r-0 border-border bg-muted/50 text-muted-foreground font-bold text-sm">
+                        <Phone className="w-3.5 h-3.5" /> +91
+                      </span>
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="98765 43210"
+                        value={formData.phone}
+                        disabled={phoneVerified}
+                        onChange={(e) => { updateField("phone", e.target.value.replace(/[^\d\s]/g, "").slice(0, 12)); setOtpSent(false); setOtp(""); setOtpError(""); }}
+                        className="h-11 text-sm font-medium rounded-l-none rounded-r-xl border-2 disabled:opacity-60"
+                      />
+                    </div>
+                    {!phoneVerified && (
+                      <Button type="button" variant={otpSent ? "outline" : "default"} onClick={handleSendOTP} disabled={otpLoading || formData.phone.replace(/\s/g, "").length < 10}
+                        className="rounded-xl h-11 px-4 text-sm font-bold shrink-0">
+                        {otpLoading && !otpSent ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                        {otpSent ? "Resend" : "Send OTP"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {otpSent && !phoneVerified && (
+                    <div className="space-y-2 animate-fade-up">
+                      <FieldLabel>Enter OTP</FieldLabel>
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          autoFocus
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          placeholder="● ● ● ● ● ●"
+                          className="h-11 text-center text-lg font-bold tracking-[0.4em] rounded-xl border-2 flex-1"
+                        />
+                        <Button type="button" onClick={handleVerifyOTP} disabled={otpLoading || otp.length < 6}
+                          className="rounded-xl h-11 px-5 text-sm font-bold shrink-0 bg-secondary hover:bg-secondary/90">
+                          {otpLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                          Verify
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {otpError && <p className="text-xs font-bold text-destructive px-1">{otpError}</p>}
+                  {phoneVerified
+                    ? <p className="text-[11px] text-green-600 dark:text-green-400 font-bold px-1">✓ Phone verified successfully</p>
+                    : <p className="text-[11px] text-muted-foreground font-medium px-1">Your number stays private. OTP verification is required to complete your profile.</p>
+                  }
+                  <div id="recaptcha-wizard" />
+                </div>
+
                 <Card className="bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 rounded-xl animate-fade-up" style={{ animationDelay: "200ms" }}>
                   <CardContent className="flex items-center gap-3 py-4">
                     <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0"><CheckCircle2 className="w-5 h-5" /></div>

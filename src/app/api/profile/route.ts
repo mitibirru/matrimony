@@ -42,14 +42,21 @@ export async function POST(req: Request) {
     const profileCount = await Profile.countDocuments();
     const profileId = `MAT${10000 + profileCount + 1}`;
 
+    // Extract phone before creating profile (phone belongs to User, not Profile)
+    const { phone, ...profileData } = data;
+
     const newProfile = await Profile.create({
       user: session.user.id,
       profileId,
       country: "India",
-      ...data,
+      ...profileData,
     });
 
-    await User.findByIdAndUpdate(session.user.id, { profileId: newProfile._id });
+    // Update User with profileId and phone number
+    await User.findByIdAndUpdate(session.user.id, {
+      profileId: newProfile._id,
+      ...(phone ? { phone: `+91${phone.replace(/\s/g, "")}` } : {}),
+    });
 
     return NextResponse.json(
       { message: "Profile created successfully", profileId: newProfile._id },

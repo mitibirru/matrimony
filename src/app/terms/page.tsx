@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { siteConfig } from "@/config/site";
 
 export default function TermsOfServicePage() {
