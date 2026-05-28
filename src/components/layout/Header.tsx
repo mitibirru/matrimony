@@ -28,7 +28,8 @@ export default async function Header() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation — public pages only for unauthenticated users */}
+        {!session && (
         <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
           <Link href="/" className="transition-colors hover:text-primary">Home</Link>
           <Link href="/about" className="transition-colors hover:text-primary">About Us</Link>
@@ -41,6 +42,7 @@ export default async function Header() {
             <span>Elite Matrimony</span>
           </Link>
         </nav>
+        )}
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-4">

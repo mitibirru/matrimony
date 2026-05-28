@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { siteConfig } from "@/config/site";
 import { ShieldCheck, Video, PhoneOff, CreditCard, Users, AlertTriangle } from "lucide-react";
 

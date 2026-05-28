@@ -57,9 +57,91 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Email state
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+
+  // Phone OTP state
+  const [phone, setPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+
+  // Send OTP via Firebase
+  const handleSendOTP = async () => {
+    const cleaned = phone.replace(/\s/g, "");
+    if (cleaned.length < 10) {
+      setError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const { auth, RecaptchaVerifier, signInWithPhoneNumber } = await import("@/lib/firebase");
+
+      // Setup invisible recaptcha
+      if (!(window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+        });
+      }
+
+      const fullPhone = `+91${cleaned}`;
+      const result = await signInWithPhoneNumber(auth, fullPhone, (window as any).recaptchaVerifier);
+      setConfirmationResult(result);
+      setOtpSent(true);
+    } catch (err: any) {
+      console.error("OTP send error:", err);
+      setError(err.message || "Failed to send OTP. Please try again.");
+      // Reset recaptcha on error
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+        (window as any).recaptchaVerifier = null;
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Verify OTP and authenticate
+  const handleVerifyOTP = async () => {
+    if (otp.length < 6) {
+      setError("Please enter the 6-digit OTP");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const credential = await confirmationResult.confirm(otp);
+      const idToken = await credential.user.getIdToken();
+
+      // Send to our API to create/find user and set session
+      const res = await fetch("/api/auth/phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Verification failed");
+        return;
+      }
+
+      router.push("/discover");
+      router.refresh();
+    } catch (err: any) {
+      console.error("OTP verify error:", err);
+      setError("Invalid OTP. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +149,11 @@ function LoginForm() {
     setError("");
 
     if (authMethod === "phone") {
-      setError("Phone authentication is coming soon. Please use email for now.");
-      setIsLoading(false);
+      if (!otpSent) {
+        await handleSendOTP();
+      } else {
+        await handleVerifyOTP();
+      }
       return;
     }
 
@@ -197,7 +282,8 @@ function LoginForm() {
             {/* Google Auth */}
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-card text-foreground font-bold text-[15px] border-2 border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
+              onClick={() => signIn("google", { callbackUrl: "/discover" })}
+              className="w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-card text-foreground font-bold text-[15px] border-2 border-border shadow-sm hover:shadow-md hover:border-primary/20 active:scale-[0.98] transition-all"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -267,7 +353,7 @@ function LoginForm() {
                 ) : (
                   <div
                     key="phone"
-                    className="space-y-1.5"
+                    className="space-y-3"
                   >
                     <label htmlFor="phone" className="block text-sm font-black text-foreground px-1">
                       Mobile Number
@@ -282,16 +368,47 @@ function LoginForm() {
                         type="tel"
                         autoComplete="tel"
                         required={authMethod === "phone"}
+                        disabled={otpSent}
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="block w-full px-4 py-4 bg-muted/30 border-2 border-l-0 border-border rounded-r-2xl placeholder:text-muted-foreground/60 focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-[15px] outline-none"
+                        className="block w-full px-4 py-4 bg-muted/30 border-2 border-l-0 border-border rounded-r-2xl placeholder:text-muted-foreground/60 focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-[15px] outline-none disabled:opacity-60"
                         placeholder="98765 43210"
                       />
                     </div>
+
+                    {/* OTP Input — shown after OTP is sent */}
+                    {otpSent && (
+                      <div className="space-y-1.5 animate-fade-up">
+                        <label htmlFor="otp" className="block text-sm font-black text-foreground px-1">
+                          Enter OTP
+                        </label>
+                        <input
+                          id="otp"
+                          name="otp"
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          autoFocus
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className="block w-full px-4 py-4 bg-muted/30 border-2 border-border rounded-2xl placeholder:text-muted-foreground/60 focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-xl tracking-[0.5em] text-center outline-none"
+                          placeholder="● ● ● ● ● ●"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { setOtpSent(false); setOtp(""); setConfirmationResult(null); }}
+                          className="text-xs font-bold text-primary hover:text-primary/80 transition-colors px-1"
+                        >
+                          Change number / Resend OTP
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               
 
+              {/* Password — only for email auth */}
+              {authMethod === "email" && (
               <div
                 className="space-y-1.5"
               >
@@ -320,7 +437,9 @@ function LoginForm() {
                   </button>
                 </div>
               </div>
+              )}
 
+              {authMethod === "email" && (
               <div
                 className="flex items-center justify-between px-1"
               >
@@ -335,6 +454,7 @@ function LoginForm() {
                   Forgot password?
                 </a>
               </div>
+              )}
 
               <button
                 type="submit"
@@ -344,16 +464,19 @@ function LoginForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Signing in...
+                    {authMethod === "phone" ? (otpSent ? "Verifying..." : "Sending OTP...") : "Signing in..."}
                   </>
                 ) : (
                   <>
-                    Sign in
+                    {authMethod === "phone" ? (otpSent ? "Verify OTP" : "Send OTP") : "Sign in"}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>
             </form>
+
+            {/* Invisible recaptcha container */}
+            <div id="recaptcha-container" />
           </div>
 
           <p className="text-center text-sm font-medium text-muted-foreground mt-8">

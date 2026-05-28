@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { siteConfig } from "@/config/site";
 import { Mail, MapPin, Phone } from "lucide-react";
 

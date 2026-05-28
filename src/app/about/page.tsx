@@ -1,3 +1,5 @@
+export const dynamic = "force-static";
+
 import { siteConfig } from "@/config/site";
 import { Heart, ShieldCheck, Users } from "lucide-react";
 
