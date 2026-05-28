@@ -7,7 +7,7 @@ import {
   GraduationCap, Eye, MessageCircle, BookmarkPlus,
   ChevronRight, Search, Bookmark, Send, Flame, Zap, Crown, Camera,
   Edit3, MoreHorizontal, Share2, Users, Clock,
-  TrendingUp, ChevronDown, CheckCircle2, MessageSquare
+  TrendingUp, ChevronDown, CheckCircle2, MessageSquare, Mail, Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -296,6 +296,61 @@ function ProfileCompletionBanner() {
   );
 }
 
+// ────── Email Verification Banner ──────
+function EmailVerificationBanner({ email }: { email: string }) {
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleResend = async () => {
+    setLoading(true);
+    setError("");
+    setSent(false);
+    try {
+      const res = await fetch("/api/auth/verify-email/resend", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to resend");
+      setSent(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to resend. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 overflow-hidden animate-fade-up">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500">
+        <Mail className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">Verify your email address</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Please check <span className="font-bold text-foreground">{email}</span> to verify your account.
+        </p>
+      </div>
+      <div className="shrink-0">
+        {sent ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-green-600 bg-green-500/10 px-3 py-1.5 rounded-xl">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Link Sent!
+          </span>
+        ) : (
+          <Button
+            size="sm"
+            onClick={handleResend}
+            disabled={loading}
+            className="rounded-xl h-9 px-4 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-md shadow-amber-500/10"
+          >
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+            Resend Link
+          </Button>
+        )}
+      </div>
+      {error && <p className="absolute bottom-1 left-4 text-[10px] font-bold text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 // ────── Filter Bar ──────
 function FeedFilterBar({ active, onChange }: { active: string; onChange: (v: string) => void }) {
   const filters = [
@@ -336,7 +391,15 @@ const MOCK_PROFILES: MockProfile[] = [
 ];
 
 // ────── Main Dashboard ──────
-export default function DashboardOverview({ profile }: { profile: Record<string, unknown> }) {
+export default function DashboardOverview({
+  profile,
+  emailVerified = true,
+  email = ""
+}: {
+  profile: Record<string, unknown>;
+  emailVerified?: boolean;
+  email?: string;
+}) {
   const [activeFilter, setActiveFilter] = useState("foryou");
 
   const getAge = (dobString: string) => {
@@ -391,6 +454,7 @@ export default function DashboardOverview({ profile }: { profile: Record<string,
               <div className="flex items-center gap-2 mb-3"><Users className="w-4 h-4 text-primary" /><span className="text-sm font-black text-foreground">Recently Active</span></div>
               <RecentlyActiveScroller />
             </div>
+            {!emailVerified && <EmailVerificationBanner email={email} />}
             <ProfileCompletionBanner />
             <FeedFilterBar active={activeFilter} onChange={setActiveFilter} />
 

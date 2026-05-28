@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
           role: user.role,
+          emailVerified: user.emailVerified,
         };
       }
     })
@@ -62,6 +63,7 @@ export const authOptions: NextAuthOptions = {
             firstName: nameParts[0] || "User",
             lastName: nameParts.slice(1).join(" ") || "",
             isVerified: true, // Google accounts are pre-verified
+            emailVerified: true,
           });
         }
       }
@@ -74,10 +76,12 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
+          token.emailVerified = dbUser.emailVerified;
         }
       } else if (user) {
         token.id = user.id;
         token.role = (user as any).role;
+        token.emailVerified = (user as any).emailVerified;
       }
       return token;
     },
@@ -85,6 +89,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         (session.user as any).role = token.role as string;
+        (session.user as any).emailVerified = token.emailVerified as boolean;
       }
       return session;
     }
