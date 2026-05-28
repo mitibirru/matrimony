@@ -3,9 +3,15 @@ import { getAdminAuth } from "@/lib/firebase-admin";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import jwt from "jsonwebtoken";
+import { rateLimit, getIpAddress, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = getIpAddress(req);
+    if (!rateLimit(ip, 5, 60 * 1000)) {
+      return rateLimitResponse();
+    }
+
     const { idToken } = await req.json();
 
     if (!idToken) {
@@ -32,6 +38,7 @@ export async function POST(req: Request) {
         firstName: "User",
         lastName: "",
         isVerified: true,
+        emailVerified: true,
       });
     }
 
@@ -42,6 +49,7 @@ export async function POST(req: Request) {
         email: user.email,
         name: `${user.firstName} ${user.lastName}`.trim(),
         role: user.role,
+        emailVerified: true,
       },
       process.env.NEXTAUTH_SECRET!,
       { expiresIn: "30d" }

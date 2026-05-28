@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Profile from "@/models/Profile";
+import User from "@/models/User";
 import ProfileWizard from "@/components/dashboard/ProfileWizard";
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
 
@@ -20,6 +21,7 @@ export default async function DiscoverPage() {
 
   await dbConnect();
 
+  const user = await User.findById(session.user.id).select("email emailVerified").lean();
   const profile = await Profile.findOne({ user: session.user.id }).lean();
   const serializedProfile = profile ? JSON.parse(JSON.stringify(profile)) : null;
 
@@ -31,5 +33,11 @@ export default async function DiscoverPage() {
     );
   }
 
-  return <DashboardOverview profile={serializedProfile} />;
+  return (
+    <DashboardOverview
+      profile={serializedProfile}
+      emailVerified={user?.emailVerified ?? false}
+      email={user?.email || ""}
+    />
+  );
 }

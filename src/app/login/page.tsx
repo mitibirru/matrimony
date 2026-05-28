@@ -450,9 +450,9 @@ function LoginForm() {
                   </div>
                   <span className="text-sm font-semibold text-foreground">Remember me</span>
                 </label>
-                <a href="#" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors">
+                <Link href="/forgot-password" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               )}
 
