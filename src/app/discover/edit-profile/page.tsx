@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Profile from "@/models/Profile";
 import EditProfileForm from "@/components/dashboard/EditProfileForm";
 
 export const metadata = {
@@ -14,17 +12,23 @@ export default async function EditProfilePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  await dbConnect();
-  const profile = await Profile.findOne({ user: session.user.id }).lean();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const res = await fetch(`${API_URL}/api/profile`, {
+    headers: {
+      "Authorization": `Bearer ${session.accessToken}`,
+    },
+    cache: "no-store"
+  });
 
-  if (!profile) redirect("/discover");
+  const data = await res.json().catch(() => ({}));
+  const serializedProfile = data.profile || null;
 
-  const serializedProfile = JSON.parse(JSON.stringify(profile));
+  if (!serializedProfile) redirect("/discover");
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-muted/30">
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
-        <EditProfileForm profile={serializedProfile} />
+        <EditProfileForm profile={serializedProfile} accessToken={(session as any).accessToken} />
       </div>
     </div>
   );

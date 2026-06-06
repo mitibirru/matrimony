@@ -1,9 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Profile from "@/models/Profile";
-import User from "@/models/User";
 import ProfileWizard from "@/components/dashboard/ProfileWizard";
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
 
@@ -19,11 +16,23 @@ export default async function DiscoverPage() {
     redirect("/login");
   }
 
-  await dbConnect();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const res = await fetch(`${API_URL}/api/profile`, {
+    headers: {
+      "Authorization": `Bearer ${session.accessToken}`,
+    },
+    // Next.js cache control for dynamic data
+    cache: "no-store"
+  });
 
-  const user = await User.findById(session.user.id).select("email emailVerified").lean();
-  const profile = await Profile.findOne({ user: session.user.id }).lean();
-  const serializedProfile = profile ? JSON.parse(JSON.stringify(profile)) : null;
+  if (!res.ok) {
+    // If unauthorized or error, maybe we need them to login again
+    console.error("Failed to fetch profile");
+  }
+
+  const data = await res.json().catch(() => ({}));
+  const user = data.user || null;
+  const serializedProfile = data.profile || null;
 
   if (!serializedProfile) {
     return (
