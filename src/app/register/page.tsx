@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 
 import { siteConfig } from "@/config/site";
 import {
@@ -60,9 +60,19 @@ const PASSWORD_RULES = [
   { test: (p: string) => /[0-9]/.test(p), label: "One number" },
 ];
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/discover");
+    }
+  }, [status, router]);
+
+  const searchParams = useSearchParams();
+  const methodParam = searchParams.get("method") as "email" | "phone" | null;
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">(methodParam === "phone" ? "phone" : "email");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -82,8 +92,8 @@ export default function RegisterPage() {
 
   // Send OTP via Firebase
   const handleSendOTP = async () => {
-    const cleaned = phone.replace(/\s/g, "");
-    if (cleaned.length < 10) {
+    const cleaned = phone.replace(/\s/g, "").replace(/^\+91/, "");
+    if (cleaned.length !== 10 || !/^\d{10}$/.test(cleaned)) {
       setError("Please enter a valid 10-digit mobile number");
       return;
     }
@@ -92,6 +102,22 @@ export default function RegisterPage() {
     setError("");
 
     try {
+      const fullPhone = `+91${cleaned}`;
+      
+      // Check if user already exists
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const checkRes = await fetch(`${API_URL}/api/auth/check-phone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone }),
+      });
+      const checkData = await checkRes.json();
+      if (checkData.exists) {
+        setError("Account already exists. Please use sign in.");
+        setIsLoading(false);
+        return;
+      }
+
       const { auth, RecaptchaVerifier, signInWithPhoneNumber } = await import("@/lib/firebase");
 
       if (!(window as any).recaptchaVerifier) {
@@ -100,7 +126,6 @@ export default function RegisterPage() {
         });
       }
 
-      const fullPhone = `+91${cleaned}`;
       const result = await signInWithPhoneNumber(auth, fullPhone, (window as any).recaptchaVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
@@ -116,7 +141,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Verify OTP and authenticate
+  // Verify OTP and authenticate via NextAuth
   const handleVerifyOTP = async () => {
     if (otp.length < 6) {
       setError("Please enter the 6-digit OTP");
@@ -130,20 +155,18 @@ export default function RegisterPage() {
       const credential = await confirmationResult.confirm(otp);
       const idToken = await credential.user.getIdToken();
 
-      const res = await fetch("/api/auth/phone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+      // Use NextAuth signIn with our phone-credentials provider
+      // This calls the backend /api/auth/phone internally and creates a session
+      const res = await signIn("phone-credentials", {
+        redirect: false,
+        idToken,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Verification failed");
-        return;
+      if (res?.error) {
+        setError(res.error);
+      } else {
+        window.location.href = "/discover";
       }
-
-      router.push("/discover");
-      router.refresh();
     } catch (err: any) {
       console.error("OTP verify error:", err);
       setError("Invalid OTP. Please try again.");
@@ -171,7 +194,8 @@ export default function RegisterPage() {
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(" ") || " ";
 
-      const res = await fetch("/api/auth/register", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
@@ -541,5 +565,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 import { siteConfig } from "@/config/site";
 import {
@@ -51,6 +51,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/discover");
+    }
+  }, [status, router]);
 
   const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [isLoading, setIsLoading] = useState(false);
@@ -69,8 +76,8 @@ function LoginForm() {
 
   // Send OTP via Firebase
   const handleSendOTP = async () => {
-    const cleaned = phone.replace(/\s/g, "");
-    if (cleaned.length < 10) {
+    const cleaned = phone.replace(/\s/g, "").replace(/^\+91/, "");
+    if (cleaned.length !== 10 || !/^\d{10}$/.test(cleaned)) {
       setError("Please enter a valid 10-digit mobile number");
       return;
     }
@@ -79,6 +86,24 @@ function LoginForm() {
     setError("");
 
     try {
+      const fullPhone = `+91${cleaned}`;
+      
+      // Check if user exists
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const checkRes = await fetch(`${API_URL}/api/auth/check-phone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone }),
+      });
+      const checkData = await checkRes.json();
+      if (!checkData.exists) {
+        setError("Account not found. Redirecting to sign up...");
+        setTimeout(() => {
+          router.push("/register?method=phone");
+        }, 1500);
+        return;
+      }
+
       const { auth, RecaptchaVerifier, signInWithPhoneNumber } = await import("@/lib/firebase");
 
       // Setup invisible recaptcha
@@ -88,7 +113,6 @@ function LoginForm() {
         });
       }
 
-      const fullPhone = `+91${cleaned}`;
       const result = await signInWithPhoneNumber(auth, fullPhone, (window as any).recaptchaVerifier);
       setConfirmationResult(result);
       setOtpSent(true);
@@ -105,7 +129,7 @@ function LoginForm() {
     }
   };
 
-  // Verify OTP and authenticate
+  // Verify OTP and authenticate via NextAuth
   const handleVerifyOTP = async () => {
     if (otp.length < 6) {
       setError("Please enter the 6-digit OTP");
@@ -119,22 +143,18 @@ function LoginForm() {
       const credential = await confirmationResult.confirm(otp);
       const idToken = await credential.user.getIdToken();
 
-      // Send to our API to create/find user and set session
-      const res = await fetch("/api/auth/phone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+      // Use NextAuth signIn with our phone-credentials provider
+      // This calls the backend /api/auth/phone internally and creates a session
+      const res = await signIn("phone-credentials", {
+        redirect: false,
+        idToken,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Verification failed");
-        return;
+      if (res?.error) {
+        setError(res.error);
+      } else {
+        window.location.href = "/discover";
       }
-
-      router.push("/discover");
-      router.refresh();
     } catch (err: any) {
       console.error("OTP verify error:", err);
       setError("Invalid OTP. Please try again.");
@@ -167,8 +187,7 @@ function LoginForm() {
       if (res?.error) {
         setError(res.error);
       } else {
-        router.push("/discover");
-        router.refresh();
+        window.location.href = "/discover";
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");

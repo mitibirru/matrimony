@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useSession } from "next-auth/react";
 
 // ────── Stories / Recently Active ──────
 function RecentlyActiveScroller() {
@@ -272,24 +273,34 @@ function TrendingSidebar() {
 }
 
 // ────── Profile Completion Banner ──────
-function ProfileCompletionBanner() {
+function ProfileCompletionBanner({ profile }: { profile: Record<string, unknown> }) {
+  // Determine missing essential fields that were skipped during initial onboarding
+  const essentialFields = ["height", "education", "profession", "about", "maritalStatus", "community"];
+  const missingFields = essentialFields.filter(f => !profile[f]);
+
+  if (missingFields.length === 0) return null;
+
+  const percentage = Math.round(((essentialFields.length - missingFields.length) / essentialFields.length) * 100);
+
   return (
-    <div className="relative bg-linear-to-r from-primary/5 via-primary/3 to-secondary/5 border border-primary/10 rounded-2xl p-4 flex items-center gap-4 overflow-hidden animate-fade-up">
+    <div className="relative bg-linear-to-r from-primary/5 via-primary/3 to-secondary/5 border border-primary/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 overflow-hidden animate-fade-up">
       <div className="absolute inset-0 animate-shimmer pointer-events-none" />
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 flex items-center justify-center">
         <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-border" />
           <circle cx="24" cy="24" r="20" fill="none" stroke="url(#cg)" strokeWidth="3.5" strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 20} strokeDashoffset={2 * Math.PI * 20 * 0.15} className="transition-all duration-1000" />
+            strokeDasharray={2 * Math.PI * 20} strokeDashoffset={2 * Math.PI * 20 * (1 - percentage / 100)} className="transition-all duration-1000" />
           <defs><linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="var(--primary)" /><stop offset="100%" stopColor="var(--secondary)" /></linearGradient></defs>
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center"><span className="text-[10px] font-black text-foreground">85%</span></div>
+        <div className="absolute inset-0 flex items-center justify-center"><span className="text-[10px] font-black text-foreground">{percentage}%</span></div>
       </div>
       <div className="relative flex-1 min-w-0">
-        <p className="text-sm font-bold text-foreground">Complete your profile to get 5x more responses</p>
-        <div className="flex gap-2 mt-2">
-          <button className="flex items-center gap-1 px-2.5 py-1 bg-secondary/10 text-secondary rounded-full text-[11px] font-bold hover:bg-secondary/15 hover:scale-105 active:scale-95 transition-all"><Camera className="w-3 h-3" /> Add Photos</button>
-          <button className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold hover:bg-primary/15 hover:scale-105 active:scale-95 transition-all"><Edit3 className="w-3 h-3" /> Preferences</button>
+        <p className="text-base font-bold text-foreground">Your profile is {percentage}% complete!</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Add your education, career, and family details to get 5x more matches.</p>
+        <div className="flex gap-2 mt-3">
+          <Link href="/discover/edit-profile" className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-bold hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/20">
+            <Edit3 className="w-3.5 h-3.5" /> Complete Profile
+          </Link>
         </div>
       </div>
     </div>
@@ -301,13 +312,20 @@ function EmailVerificationBanner({ email }: { email: string }) {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const { data: session } = useSession();
 
   const handleResend = async () => {
     setLoading(true);
     setError("");
     setSent(false);
     try {
-      const res = await fetch("/api/auth/verify-email/resend", { method: "POST" });
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const res = await fetch(`${API_URL}/api/auth/verify-email/resend`, { 
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session?.accessToken}`
+        }
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to resend");
       setSent(true);
@@ -455,7 +473,7 @@ export default function DashboardOverview({
               <RecentlyActiveScroller />
             </div>
             {!emailVerified && <EmailVerificationBanner email={email} />}
-            <ProfileCompletionBanner />
+            <ProfileCompletionBanner profile={profile} />
             <FeedFilterBar active={activeFilter} onChange={setActiveFilter} />
 
             <div className="space-y-5">
