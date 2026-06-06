@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Profile from "@/models/Profile";
 import MyProfileView from "@/components/profile/MyProfileView";
 
 export const metadata = {
@@ -14,12 +12,18 @@ export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  await dbConnect();
-  const profile = await Profile.findOne({ user: session.user.id }).lean();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const res = await fetch(`${API_URL}/api/profile`, {
+    headers: {
+      "Authorization": `Bearer ${session.accessToken}`,
+    },
+    cache: "no-store"
+  });
 
-  if (!profile) redirect("/discover");
+  const data = await res.json().catch(() => ({}));
+  const serializedProfile = data.profile || null;
 
-  const serializedProfile = JSON.parse(JSON.stringify(profile));
+  if (!serializedProfile) redirect("/discover");
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-muted/30">

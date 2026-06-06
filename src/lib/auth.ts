@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import bcrypt from "bcryptjs";
-import dbConnect from "./db";
-import User from "@/models/User";
+import jwt from "jsonwebtoken";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -12,6 +12,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
+      id: "credentials",
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "you@example.com" },
@@ -22,74 +23,106 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing email or password");
         }
 
-        await dbConnect();
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
+        });
 
-        const user = await User.findOne({ email: credentials.email });
+        const data = await res.json();
 
-        if (!user) {
-          throw new Error("Invalid email or password");
+        if (!res.ok) {
+          throw new Error(data.message || "Authentication failed");
         }
 
-        if (!user.password) {
-          throw new Error("Please login with the provider you signed up with");
+        return data.user;
+      }
+    }),
+    CredentialsProvider({
+      id: "phone-credentials",
+      name: "Phone",
+      credentials: {
+        idToken: { label: "Firebase ID Token", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.idToken) {
+          throw new Error("Missing Firebase ID token");
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        const res = await fetch(`${API_URL}/api/auth/phone`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: credentials.idToken }),
+        });
 
-        if (!isPasswordValid) {
-          throw new Error("Invalid email or password");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Phone authentication failed");
         }
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          role: user.role,
-          emailVerified: user.emailVerified,
-        };
+        return data.user;
       }
     })
   ],
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        await dbConnect();
-        const existingUser = await User.findOne({ email: user.email });
-        if (!existingUser) {
-          // Auto-create user on first Google sign-in
-          const nameParts = (user.name || "").split(" ");
-          await User.create({
+        // Send to backend to create/verify user
+        const res = await fetch(`${API_URL}/api/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             email: user.email,
-            firstName: nameParts[0] || "User",
-            lastName: nameParts.slice(1).join(" ") || "",
-            isVerified: true, // Google accounts are pre-verified
-            emailVerified: true,
-          });
+            name: user.name,
+          }),
+        });
+
+        if (!res.ok) {
+          return false;
         }
+
+        const data = await res.json();
+        // Mutate user object so it gets passed to jwt callback
+        user.id = data.user.id;
+        (user as any).role = data.user.role;
+        (user as any).emailVerified = data.user.emailVerified;
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      if (account?.provider === "google") {
-        await dbConnect();
-        const dbUser = await User.findOne({ email: token.email });
-        if (dbUser) {
-          token.id = dbUser._id.toString();
-          token.role = dbUser.role;
-          token.emailVerified = dbUser.emailVerified;
-        }
-      } else if (user) {
+    async jwt({ token, user }) {
+      // The user object is only passed on the initial sign in
+      if (user) {
         token.id = user.id;
         token.role = (user as any).role;
-        token.emailVerified = (user as any).emailVerified;
+        token.emailVerified = !!(user as any).emailVerified;
       }
+
+      // Generate a raw JWT for our Fastify backend
+      if (!token.accessToken) {
+        token.accessToken = jwt.sign(
+          {
+            id: token.id,
+            email: token.email,
+            role: token.role,
+            emailVerified: token.emailVerified,
+          },
+          process.env.NEXTAUTH_SECRET as string,
+          { expiresIn: "30d" }
+        );
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role as string;
-        (session.user as any).emailVerified = token.emailVerified as boolean;
+        session.user.role = token.role as string;
+        session.user.emailVerified = token.emailVerified as boolean;
+        (session as any).accessToken = token.accessToken as string;
       }
       return session;
     }
@@ -102,3 +135,4 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
