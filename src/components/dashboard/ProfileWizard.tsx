@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSession } from "next-auth/react";
 import { Calendar } from "@/components/ui/calendar";
 
 // ────── Floating BG Orbs (pure CSS) ──────
@@ -78,7 +79,7 @@ function DropdownPicker({ value, options, onSelect, placeholder = "Select..." }:
 }
 
 // ────── Chip Selector ──────
-function ChipSelector({ options, value, onSelect }: { options: string[]; value: string; onSelect: (val: string) => void }) {
+function ChipSelector({ options, value, onSelect, descriptions }: { options: string[]; value: string; onSelect: (val: string) => void; descriptions?: Record<string, string> }) {
   const [justSelected, setJustSelected] = useState("");
 
   const handleSelect = (opt: string) => {
@@ -88,17 +89,22 @@ function ChipSelector({ options, value, onSelect }: { options: string[]; value: 
   };
 
   return (
-    <div className="flex flex-wrap gap-2.5">
-      {options.map(opt => (
-        <Button key={opt} type="button" variant={value === opt ? "default" : "outline"} size="sm"
-          onClick={() => handleSelect(opt)}
-          className={`rounded-xl h-10 px-5 text-sm font-semibold transition-all duration-200
-            ${value === opt ? "shadow-md shadow-primary/20 scale-[1.03]" : "hover:border-primary/40 hover:shadow-sm"}
-            ${justSelected === opt ? "animate-pop" : ""}`}>
-          {value === opt && <Check className="w-3.5 h-3.5 mr-1.5 animate-check-pop" />}
-          {opt}
-        </Button>
-      ))}
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2.5">
+        {options.map(opt => (
+          <Button key={opt} type="button" variant={value === opt ? "default" : "outline"} size="sm"
+            onClick={() => handleSelect(opt)}
+            className={`rounded-xl h-10 px-5 text-sm font-semibold transition-all duration-200
+              ${value === opt ? "shadow-md shadow-primary/20 scale-[1.03]" : "hover:border-primary/40 hover:shadow-sm"}
+              ${justSelected === opt ? "animate-pop" : ""}`}>
+            {value === opt && <Check className="w-3.5 h-3.5 mr-1.5 animate-check-pop" />}
+            {opt}
+          </Button>
+        ))}
+      </div>
+      {value && descriptions && descriptions[value] && (
+        <p className="text-xs text-muted-foreground animate-fade-in">{descriptions[value]}</p>
+      )}
     </div>
   );
 }
@@ -144,21 +150,35 @@ const NAKSHATRA_OPTIONS = [
   "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati",
 ].map(n => ({ value: n, label: n }));
 
+const COUNTRY_OPTIONS = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua & Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Congo (DRC)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts & Nevis", "Saint Lucia", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad & Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "USA", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+].map(c => ({ value: c, label: c }));
+
 const STATE_OPTIONS = [
-  "Andhra Pradesh", "Telangana", "Maharashtra", "Tamil Nadu", "Karnataka",
-  "Kerala", "Goa", "Delhi", "Uttar Pradesh", "Madhya Pradesh", "Rajasthan",
-  "Gujarat", "West Bengal", "Bihar", "Odisha", "Punjab", "Haryana",
-  "Jharkhand", "Chhattisgarh", "Assam", "Other",
+  "Andaman & Nicobar", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra & Nagar Haveli", "Daman & Diu", "Delhi-NCR", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu & Kashmir", "Jharkhand", "Karnataka", "Kerala", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Orissa", "Pondicherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttaranchal", "West Bengal"
 ].map(s => ({ value: s, label: s }));
 
-const COMMUNITY_OPTIONS = [
-  "Telugu", "Marathi", "Tamil", "Kannada", "Malayalam", "Hindi",
-  "Konkani", "Tulu", "Urdu", "Other",
-].map(c => ({ value: c, label: c }));
+const DIET_DESCRIPTIONS: Record<string, string> = {
+  "Vegetarian": "No meat, poultry, fish, or eggs. Dairy is included.",
+  "Non-Vegetarian": "Includes meat, poultry, fish, and other animal products.",
+  "Occasionally Non-Vegetarian": "Mostly vegetarian, but occasionally eats meat or fish.",
+  "Eggetarian": "Vegetarian diet that includes eggs.",
+  "Vegan": "No animal products, including dairy, eggs, and honey."
+};
+
+const RELIGION_OPTIONS = [
+  "Hindu", "Muslim", "Christian", "Sikh", "Parsi", "Jain",
+  "Buddhist", "Jewish", "No Religion", "Spiritual", "Other"
+].map(r => ({ value: r, label: r }));
+
+const MOTHER_TONGUE_OPTIONS = [
+  "Aka", "Arabic", "Arunachali", "Assamese", "Awadhi", "Baluchi", "Bengali", "Bhojpuri", "Bhutia", "Brahui", "Brij", "Burmese", "Chattisgarhi", "Chinese", "Coorgi", "Dogri", "English", "French", "Garhwali", "Garo", "Gujarati", "Haryanavi", "Himachali/Pahari", "Hindi", "Hindko", "Kakbarak", "Kanauji", "Kannada", "Kashmiri", "Khandesi", "Khasi", "Konkani", "Koshali", "Kumaoni", "Kutchi", "Ladakhi", "Lepcha", "Magahi", "Maithili", "Malay", "Malayalam", "Manipuri", "Marathi", "Marwari", "Miji", "Mizo", "Monpa", "Nepali", "Odia", "Pashto", "Persian", "Punjabi", "Rajasthani", "Russian", "Sanskrit", "Santhali", "Seraiki", "Sindhi", "Sinhala", "Sourashtra", "Spanish", "Swedish", "Tagalog", "Tamil", "Telugu", "Tulu", "Urdu", "Other"
+].map(m => ({ value: m, label: m }));
 
 // ────── Main Wizard ──────
 export default function ProfileWizard({ userId }: { userId: string }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -175,8 +195,8 @@ export default function ProfileWizard({ userId }: { userId: string }) {
   const [otpError, setOtpError] = useState("");
 
   const handleSendOTP = async () => {
-    const cleaned = formData.phone.replace(/\s/g, "");
-    if (cleaned.length < 10) { setOtpError("Enter a valid 10-digit number"); return; }
+    const cleaned = formData.phone.replace(/\s/g, "").replace(/^\+91/, "");
+    if (cleaned.length !== 10 || !/^\d{10}$/.test(cleaned)) { setOtpError("Enter a valid 10-digit number"); return; }
     setOtpLoading(true); setOtpError("");
     try {
       const { auth, RecaptchaVerifier, signInWithPhoneNumber } = await import("@/lib/firebase");
@@ -221,16 +241,13 @@ export default function ProfileWizard({ userId }: { userId: string }) {
 
   const updateField = (field: string, value: string | number) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  const totalSteps = 6;
+  const totalSteps = 3;
   const progressValue = (step / totalSteps) * 100;
 
   const stepConfig = [
     { icon: Heart, label: "Basic", title: "The Basics", desc: "Tell us about yourself" },
-    { icon: Star, label: "Religion", title: "Your Roots", desc: "Religion, community & astrology" },
-    { icon: Users, label: "Family", title: "Family Details", desc: "About your family background" },
-    { icon: Briefcase, label: "Career", title: "Education & Career", desc: "Your qualifications and profession" },
-    { icon: MapPin, label: "Location", title: "Location & Lifestyle", desc: "Where you live and lifestyle choices" },
-    { icon: PenLine, label: "Bio", title: "Your Story", desc: "Let your personality shine through" },
+    { icon: MapPin, label: "Location", title: "Location Details", desc: "Where do you live?" },
+    { icon: Phone, label: "Verify", title: "Phone Verification", desc: "Secure your account" },
   ];
   const cur = stepConfig[step - 1];
 
@@ -240,33 +257,15 @@ export default function ProfileWizard({ userId }: { userId: string }) {
         if (!formData.profileFor) return "Please select who this profile is for.";
         if (!formData.gender) return "Please select gender.";
         if (!formData.dateOfBirth) return "Please select date of birth.";
-        if (!formData.maritalStatus) return "Please select marital status.";
-        if (!formData.diet) return "Please select diet preference.";
-        return null;
-      case 2:
         if (!formData.religion) return "Please select religion.";
-        if (!formData.community) return "Please select community.";
         if (!formData.motherTongue) return "Please select mother tongue.";
         return null;
-      case 3:
-        if (!formData.fatherOccupation) return "Please enter father's occupation.";
-        if (!formData.motherOccupation) return "Please enter mother's occupation.";
-        if (!formData.familyType) return "Please select family type.";
-        if (!formData.familyStatus) return "Please select family status.";
-        if (!formData.familyValues) return "Please select family values.";
-        return null;
-      case 4:
-        if (!formData.education) return "Please select education.";
-        if (!formData.employedIn) return "Please select employment type.";
-        if (!formData.profession) return "Please enter profession.";
-        return null;
-      case 5:
+      case 2:
         if (!formData.city) return "Please enter city.";
         if (!formData.state) return "Please select state.";
         return null;
-      case 6:
-        if (!formData.about || formData.about.length < 50) return "Please write at least 50 characters about yourself.";
-        if (!formData.phone || formData.phone.replace(/\s/g, "").length < 10) return "Please enter your mobile number.";
+      case 3:
+        if (!formData.phone || formData.phone.replace(/\s/g, "").replace(/^\+91/, "").length !== 10) return "Please enter your mobile number.";
         if (!phoneVerified) return "Please verify your mobile number with OTP.";
         return null;
       default:
@@ -295,7 +294,15 @@ export default function ProfileWizard({ userId }: { userId: string }) {
     if (err) { setError(err); return; }
     setIsLoading(true); setError("");
     try {
-      const res = await fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const res = await fetch(`${API_URL}/api/profile`, { 
+        method: "POST", 
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(session as any)?.accessToken}`
+        }, 
+        body: JSON.stringify(formData) 
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to create profile");
       router.refresh();
@@ -366,21 +373,11 @@ export default function ProfileWizard({ userId }: { userId: string }) {
                   <FieldLabel>This profile is for</FieldLabel>
                   <ChipSelector options={["Self", "Son", "Daughter", "Brother", "Sister", "Relative"]} value={formData.profileFor} onSelect={(v) => updateField("profileFor", v)} />
                 </div>
-                <div className="space-y-2">
-                  <FieldLabel>Gender</FieldLabel>
-                  <ChipSelector options={["Male", "Female"]} value={formData.gender} onSelect={(v) => updateField("gender", v)} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Marital Status</FieldLabel>
-                  <DropdownPicker value={formData.maritalStatus} onSelect={(v) => updateField("maritalStatus", v)} placeholder="Select marital status"
-                    options={[
-                      { value: "Never Married", label: "Never Married" },
-                      { value: "Divorced", label: "Divorced" },
-                      { value: "Widowed", label: "Widowed" },
-                      { value: "Awaiting Divorce", label: "Awaiting Divorce" },
-                    ]} />
-                </div>
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <FieldLabel>Gender</FieldLabel>
+                    <ChipSelector options={["Male", "Female"]} value={formData.gender} onSelect={(v) => updateField("gender", v)} />
+                  </div>
                   <div className="space-y-2">
                     <FieldLabel>Date of Birth</FieldLabel>
                     <Popover>
@@ -394,211 +391,46 @@ export default function ProfileWizard({ userId }: { userId: string }) {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <div className="space-y-2">
-                    <FieldLabel>Height (cm)</FieldLabel>
-                    <Input type="number" value={formData.height} onChange={(e) => updateField("height", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Diet</FieldLabel>
-                  <ChipSelector options={["Vegetarian", "Non-Vegetarian", "Eggetarian", "Vegan"]} value={formData.diet} onSelect={(v) => updateField("diet", v)} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel optional>Body Type</FieldLabel>
-                  <ChipSelector options={["Slim", "Average", "Athletic", "Heavy"]} value={formData.bodyType} onSelect={(v) => updateField("bodyType", v)} />
-                </div>
-              </>
-            )}
-
-            {/* ── STEP 2: Religion & Astrology ── */}
-            {step === 2 && (
-              <>
-                <div className="space-y-2">
-                  <FieldLabel>Religion</FieldLabel>
-                  <ChipSelector options={["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "Other"]} value={formData.religion} onSelect={(v) => updateField("religion", v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <FieldLabel>Community</FieldLabel>
-                    <DropdownPicker value={formData.community} onSelect={(v) => updateField("community", v)} placeholder="Select community" options={COMMUNITY_OPTIONS} />
+                    <FieldLabel>Religion</FieldLabel>
+                    <DropdownPicker value={formData.religion} onSelect={(v) => updateField("religion", v)} placeholder="Select religion" options={RELIGION_OPTIONS} />
                   </div>
                   <div className="space-y-2">
                     <FieldLabel>Mother Tongue</FieldLabel>
-                    <DropdownPicker value={formData.motherTongue} onSelect={(v) => updateField("motherTongue", v)} placeholder="Select language" options={COMMUNITY_OPTIONS} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel optional>Caste</FieldLabel>
-                    <Input placeholder="e.g. Reddy, Brahmin" value={formData.caste} onChange={(e) => updateField("caste", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel optional>Sub-Caste</FieldLabel>
-                    <Input placeholder="e.g. Niyogi, Deshastha" value={formData.subCaste} onChange={(e) => updateField("subCaste", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel optional>Gothram</FieldLabel>
-                    <Input placeholder="Your Gothram" value={formData.gothram} onChange={(e) => updateField("gothram", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel>Manglik / Dosham</FieldLabel>
-                    <ChipSelector options={["Yes", "No", "Don't Know"]} value={formData.manglik} onSelect={(v) => updateField("manglik", v)} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel optional>Rashi (Moon Sign)</FieldLabel>
-                    <DropdownPicker value={formData.rashi} onSelect={(v) => updateField("rashi", v)} placeholder="Select Rashi" options={RASHI_OPTIONS} />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel optional>Nakshatra (Birth Star)</FieldLabel>
-                    <DropdownPicker value={formData.nakshatra} onSelect={(v) => updateField("nakshatra", v)} placeholder="Select Nakshatra" options={NAKSHATRA_OPTIONS} />
+                    <DropdownPicker value={formData.motherTongue} onSelect={(v) => updateField("motherTongue", v)} placeholder="Select language" options={MOTHER_TONGUE_OPTIONS} />
                   </div>
                 </div>
               </>
             )}
 
-            {/* ── STEP 3: Family Details ── */}
-            {step === 3 && (
+            {/* ── STEP 2: Location ── */}
+            {step === 2 && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <FieldLabel>Father&apos;s Occupation</FieldLabel>
-                    <Input placeholder="e.g. Retired Govt Officer" value={formData.fatherOccupation} onChange={(e) => updateField("fatherOccupation", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel>Mother&apos;s Occupation</FieldLabel>
-                    <Input placeholder="e.g. Homemaker, Teacher" value={formData.motherOccupation} onChange={(e) => updateField("motherOccupation", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel>Number of Brothers</FieldLabel>
-                    <NumberStepper value={formData.brothers} onChange={(v) => updateField("brothers", v)} />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel>Brothers Married</FieldLabel>
-                    <NumberStepper value={formData.brothersMarried} onChange={(v) => updateField("brothersMarried", v)} max={formData.brothers} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel>Number of Sisters</FieldLabel>
-                    <NumberStepper value={formData.sisters} onChange={(v) => updateField("sisters", v)} />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel>Sisters Married</FieldLabel>
-                    <NumberStepper value={formData.sistersMarried} onChange={(v) => updateField("sistersMarried", v)} max={formData.sisters} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Family Type</FieldLabel>
-                  <ChipSelector options={["Nuclear", "Joint", "Extended"]} value={formData.familyType} onSelect={(v) => updateField("familyType", v)} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Family Status</FieldLabel>
-                  <ChipSelector options={["Middle Class", "Upper Middle Class", "Rich", "Affluent"]} value={formData.familyStatus} onSelect={(v) => updateField("familyStatus", v)} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Family Values</FieldLabel>
-                  <ChipSelector options={["Orthodox", "Moderate", "Liberal"]} value={formData.familyValues} onSelect={(v) => updateField("familyValues", v)} />
-                </div>
-              </>
-            )}
-
-            {/* ── STEP 4: Education & Career ── */}
-            {step === 4 && (
-              <>
-                <div className="space-y-2">
-                  <FieldLabel>Highest Education</FieldLabel>
-                  <DropdownPicker value={formData.education} onSelect={(v) => updateField("education", v)} placeholder="Select education"
-                    options={[
-                      { value: "High School", label: "High School" },
-                      { value: "Diploma", label: "Diploma" },
-                      { value: "Bachelors", label: "Bachelors (B.Tech / B.Com / BA)" },
-                      { value: "Masters", label: "Masters (M.Tech / MBA / MA)" },
-                      { value: "Doctorate", label: "Doctorate (PhD)" },
-                      { value: "Other", label: "Other" },
-                    ]} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel optional>College / University</FieldLabel>
-                  <Input placeholder="e.g. IIT Hyderabad, Pune University" value={formData.educationDetail} onChange={(e) => updateField("educationDetail", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Employed In</FieldLabel>
-                  <ChipSelector options={["Private", "Government", "Business", "Self-Employed", "Not Working"]} value={formData.employedIn} onSelect={(v) => updateField("employedIn", v)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel>Profession / Designation</FieldLabel>
-                    <Input placeholder="e.g. Software Engineer" value={formData.profession} onChange={(e) => updateField("profession", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <FieldLabel optional>Company Name</FieldLabel>
-                    <Input placeholder="e.g. TCS, Infosys" value={formData.companyName} onChange={(e) => updateField("companyName", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel optional>Annual Income</FieldLabel>
-                  <DropdownPicker value={formData.annualIncome} onSelect={(v) => updateField("annualIncome", v)} placeholder="Select income range"
-                    options={[
-                      { value: "Below 3 LPA", label: "Below 3 LPA" },
-                      { value: "3-5 LPA", label: "3 - 5 LPA" },
-                      { value: "5-10 LPA", label: "5 - 10 LPA" },
-                      { value: "10-20 LPA", label: "10 - 20 LPA" },
-                      { value: "20-50 LPA", label: "20 - 50 LPA" },
-                      { value: "50+ LPA", label: "50+ LPA" },
-                    ]} />
-                </div>
-              </>
-            )}
-
-            {/* ── STEP 5: Location & Lifestyle ── */}
-            {step === 5 && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FieldLabel>Current City</FieldLabel>
-                    <Input placeholder="e.g. Hyderabad" value={formData.city} onChange={(e) => updateField("city", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
+                    <FieldLabel>Country</FieldLabel>
+                    <Input value="India" disabled className="h-11 text-sm font-medium rounded-xl bg-muted/50 cursor-not-allowed" />
                   </div>
                   <div className="space-y-2">
                     <FieldLabel>State</FieldLabel>
                     <DropdownPicker value={formData.state} onSelect={(v) => updateField("state", v)} placeholder="Select state" options={STATE_OPTIONS} />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <FieldLabel optional>Native Place / Hometown</FieldLabel>
-                  <Input placeholder="e.g. Guntur, Kolhapur" value={formData.nativePlace} onChange={(e) => updateField("nativePlace", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Smoking</FieldLabel>
-                  <ChipSelector options={["No", "Occasionally", "Yes"]} value={formData.smoking} onSelect={(v) => updateField("smoking", v)} />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Drinking</FieldLabel>
-                  <ChipSelector options={["No", "Occasionally", "Yes"]} value={formData.drinking} onSelect={(v) => updateField("drinking", v)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <FieldLabel>Current City</FieldLabel>
+                    <Input placeholder="e.g. Hyderabad" value={formData.city} onChange={(e) => updateField("city", e.target.value)} className="h-11 text-sm font-medium rounded-xl" />
+                  </div>
                 </div>
               </>
             )}
 
-            {/* ── STEP 6: About Me & Phone ── */}
-            {step === 6 && (
+            {/* ── STEP 3: Phone Verification ── */}
+            {step === 3 && (
               <>
-                <div className="space-y-2">
-                  <FieldLabel>About Me</FieldLabel>
-                  <Textarea value={formData.about} onChange={(e) => updateField("about", e.target.value)}
-                    placeholder="Write about yourself, your family background, hobbies, values, and what you look for in a life partner..."
-                    className="min-h-[200px] text-sm font-medium rounded-xl leading-relaxed p-4 resize-none" />
-                  <div className="flex items-center justify-between px-1">
-                    <p className="text-[11px] text-muted-foreground font-medium">Detailed bios get 3x more responses. Min 50 characters.</p>
-                    <span className={`text-[11px] font-bold transition-colors duration-300 ${formData.about.length >= 50 ? "text-green-600" : "text-muted-foreground"}`}>{formData.about.length} chars</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+                <div className="space-y-3 animate-fade-up">
                   <FieldLabel>Mobile Number {phoneVerified && <Badge className="bg-green-500 text-white text-[10px] ml-1">✓ Verified</Badge>}</FieldLabel>
                   <div className="flex gap-2">
                     <div className="flex flex-1">
@@ -611,12 +443,12 @@ export default function ProfileWizard({ userId }: { userId: string }) {
                         placeholder="98765 43210"
                         value={formData.phone}
                         disabled={phoneVerified}
-                        onChange={(e) => { updateField("phone", e.target.value.replace(/[^\d\s]/g, "").slice(0, 12)); setOtpSent(false); setOtp(""); setOtpError(""); }}
+                        onChange={(e) => { updateField("phone", e.target.value.replace(/[^\d\s+]/g, "").slice(0, 15)); setOtpSent(false); setOtp(""); setOtpError(""); }}
                         className="h-11 text-sm font-medium rounded-l-none rounded-r-xl border-2 disabled:opacity-60"
                       />
                     </div>
                     {!phoneVerified && (
-                      <Button type="button" variant={otpSent ? "outline" : "default"} onClick={handleSendOTP} disabled={otpLoading || formData.phone.replace(/\s/g, "").length < 10}
+                      <Button type="button" variant={otpSent ? "outline" : "default"} onClick={handleSendOTP} disabled={otpLoading || formData.phone.replace(/\s/g, "").replace(/^\+91/, "").length !== 10}
                         className="rounded-xl h-11 px-4 text-sm font-bold shrink-0">
                         {otpLoading && !otpSent ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
                         {otpSent ? "Resend" : "Send OTP"}
@@ -660,7 +492,7 @@ export default function ProfileWizard({ userId }: { userId: string }) {
                     <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0"><CheckCircle2 className="w-5 h-5" /></div>
                     <div>
                       <p className="text-sm font-bold text-green-800 dark:text-green-300">Almost there!</p>
-                      <p className="text-xs text-green-700 dark:text-green-400/80 mt-0.5">Submit to unlock photo uploads, partner preferences & matching.</p>
+                      <p className="text-xs text-green-700 dark:text-green-400/80 mt-0.5">Verify your phone to unlock partner preferences & matching.</p>
                     </div>
                   </CardContent>
                 </Card>
