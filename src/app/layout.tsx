@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/site";
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +37,8 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
             <Header />
@@ -45,6 +46,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <Toaster position="top-right" richColors closeButton />
           </ThemeProvider>
         </AuthProvider>
       </body>

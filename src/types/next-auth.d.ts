@@ -5,6 +5,7 @@ declare module "next-auth" {
     id: string;
     role: string;
     emailVerified?: boolean;
+    sessionId?: string;
   }
 
   interface Session {
@@ -14,6 +15,7 @@ declare module "next-auth" {
       emailVerified?: boolean;
     };
     accessToken?: string;
+    sessionId?: string;
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     role: string;
     emailVerified?: boolean;
     accessToken?: string;
+    sessionId?: string;
   }
 }

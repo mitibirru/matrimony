@@ -8,7 +8,7 @@ import { signIn, useSession } from "next-auth/react";
 import { siteConfig } from "@/config/site";
 import {
   Mail, Phone, ChevronLeft, Loader2, CheckCircle2,
-  Lock, Eye, EyeOff, ArrowRight, Shield, Users, Sparkles, Heart
+  Lock, Eye, EyeOff, ArrowRight, Shield, Users, Sparkles, Heart, AlertTriangle
 } from "lucide-react";
 
 function FloatingOrbs() {
@@ -51,6 +51,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const sessionExpired = searchParams.get("session_expired");
   const { status } = useSession();
 
   useEffect(() => {
@@ -282,6 +283,16 @@ function LoginForm() {
               </div>
             )}
           
+          {sessionExpired && (
+            <div className="mb-6">
+              <div className="p-4 bg-orange-50 dark:bg-orange-500/10 border-2 border-orange-200 dark:border-orange-500/20 rounded-2xl flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-500 mt-0.5 shrink-0" />
+                <p className="text-sm text-orange-800 dark:text-orange-400 font-semibold">
+                  Your session has expired or was revoked. Please log in again.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Error */}
           

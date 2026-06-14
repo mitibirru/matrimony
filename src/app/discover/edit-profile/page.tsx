@@ -27,7 +27,7 @@ export default async function EditProfilePage() {
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-muted/30">
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+      <div className="container max-w-5xl mx-auto px-4 py-6 sm:py-10">
         <EditProfileForm profile={serializedProfile} accessToken={(session as any).accessToken} />
       </div>
     </div>

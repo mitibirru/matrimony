@@ -27,7 +27,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-muted/30">
-      <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+      <div className="container max-w-6xl mx-auto px-4 py-6 sm:py-8">
         <MyProfileView profile={serializedProfile} user={session.user} />
       </div>
     </div>
