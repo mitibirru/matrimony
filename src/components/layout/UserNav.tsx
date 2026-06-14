@@ -73,7 +73,7 @@ export function UserNav({ user }: UserNavProps) {
               My Matches
             </Link>
             <Link 
-              href="/settings" 
+              href="/discover/settings" 
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted hover:text-primary rounded-xl transition-colors"
             >

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import ProfileWizard from "@/components/dashboard/ProfileWizard";
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
+import AutoLogout from "@/components/auth/AutoLogout";
 
 export const metadata = {
   title: "Discover | PremaJodi",
@@ -26,7 +27,10 @@ export default async function DiscoverPage() {
   });
 
   if (!res.ok) {
-    // If unauthorized or error, maybe we need them to login again
+    if (res.status === 401) {
+      // Session was revoked or is invalid, force logout
+      return <AutoLogout />;
+    }
     console.error("Failed to fetch profile");
   }
 

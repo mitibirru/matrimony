@@ -38,7 +38,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error(data.message || "Authentication failed");
         }
 
-        return data.user;
+        return {
+          ...data.user,
+          sessionId: data.user.sessionId,
+        };
       }
     }),
     CredentialsProvider({
@@ -64,7 +67,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error(data.error || "Phone authentication failed");
         }
 
-        return data.user;
+        return {
+          ...data.user,
+          sessionId: data.user.sessionId,
+        };
       }
     })
   ],
@@ -90,6 +96,7 @@ export const authOptions: NextAuthOptions = {
         user.id = data.user.id;
         (user as any).role = data.user.role;
         (user as any).emailVerified = data.user.emailVerified;
+        (user as any).sessionId = data.user.sessionId;
       }
       return true;
     },
@@ -99,6 +106,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as any).role;
         token.emailVerified = !!(user as any).emailVerified;
+        token.sessionId = (user as any).sessionId;
       }
 
       // Generate a raw JWT for our Fastify backend
@@ -109,6 +117,7 @@ export const authOptions: NextAuthOptions = {
             email: token.email,
             role: token.role,
             emailVerified: token.emailVerified,
+            sessionId: token.sessionId,
           },
           process.env.NEXTAUTH_SECRET as string,
           { expiresIn: "30d" }
@@ -123,6 +132,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.emailVerified = token.emailVerified as boolean;
         (session as any).accessToken = token.accessToken as string;
+        (session as any).sessionId = token.sessionId as string;
       }
       return session;
     }

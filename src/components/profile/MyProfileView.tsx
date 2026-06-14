@@ -5,41 +5,40 @@ import { format } from "date-fns";
 import {
   UserCircle, MapPin, GraduationCap, Briefcase, Star, Heart,
   Edit3, Calendar, Ruler, Users, Home, Cigarette, Wine,
-  ChevronRight, Shield, BadgeCheck
+  Shield, BadgeCheck, Camera, Sparkles, ChevronRight
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { X, Crown } from "lucide-react";
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | number | null }) {
+function MinimalRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | number | null }) {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-3 py-2.5">
-      <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-medium text-foreground mt-0.5">{String(value)}</p>
+    <div className="flex items-center justify-between py-4 border-b border-border/40 last:border-0 group">
+      <div className="flex items-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+        <Icon className="w-4 h-4 opacity-70" />
+        <span className="text-[13px] font-medium tracking-wide">{label}</span>
       </div>
+      <div className="text-[15px] font-semibold text-foreground text-right">{String(value)}</div>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionHeading({ title, icon: Icon }: { title: string; icon: React.ElementType }) {
   return (
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader className="py-4 pb-0">
-        <CardTitle className="text-sm font-bold text-foreground">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-2 pb-4 divide-y divide-border/50">
-        {children}
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3 mb-6 mt-12">
+      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+        <Icon className="w-5 h-5" />
+      </div>
+      <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+    </div>
   );
 }
 
 export default function MyProfileView({ profile, user }: { profile: Record<string, any>; user: any }) {
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  
   const getAge = (dob: string) => {
     const today = new Date();
     const birth = new Date(dob);
@@ -56,129 +55,168 @@ export default function MyProfileView({ profile, user }: { profile: Record<strin
     ? user.name
     : user?.email?.split("@")[0] || "User";
 
-  return (
-    <div className="space-y-5">
+  const hasPhotos = profile.photos && profile.photos.length > 0;
+  const primaryPhoto = hasPhotos ? profile.photos[0] : null;
 
-      {/* Profile Header Card */}
-      <Card className="rounded-2xl shadow-sm overflow-hidden">
-        {/* Cover gradient */}
-        <div className="h-28 sm:h-36 bg-gradient-to-br from-primary via-primary/90 to-secondary relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent)]" />
-        </div>
-        <CardContent className="relative pt-0 pb-5 px-5">
-          {/* Avatar */}
-          <div className="-mt-12 sm:-mt-14 mb-3 flex items-end justify-between">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-card border-4 border-card flex items-center justify-center shadow-lg">
-              <UserCircle className="w-12 h-12 sm:w-14 sm:h-14 text-muted-foreground/30" />
+  return (
+    <div className="pb-24 animate-in fade-in duration-1000">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        
+        {/* Left Column: Sticky Profile Card (Editorial Style) */}
+        <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+          <div className="relative aspect-[3/4] w-full rounded-[2rem] bg-muted/20 border border-border/50 shadow-2xl overflow-hidden group">
+            {primaryPhoto ? (
+              <img src={primaryPhoto} alt={displayName} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30">
+                <UserCircle className="w-32 h-32 mb-4" />
+                <p className="font-medium tracking-widest uppercase text-sm">No Photo</p>
+              </div>
+            )}
+
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+            {/* Floating Info inside Photo */}
+            <div className="absolute bottom-0 inset-x-0 p-8 text-white">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-4xl font-extrabold tracking-tight">{displayName}{age ? `, ${age}` : ""}</h1>
+                <BadgeCheck className="w-8 h-8 text-blue-400 drop-shadow-md" />
+              </div>
+              <p className="text-lg text-white/90 font-medium tracking-wide flex items-center gap-2">
+                <Briefcase className="w-4 h-4" /> {profile.profession || "Professional"}
+              </p>
+              <p className="text-sm text-white/70 font-medium tracking-wide flex items-center gap-2 mt-1">
+                <MapPin className="w-4 h-4" /> {profile.city ? `${profile.city}, ${profile.country}` : "Location not specified"}
+              </p>
             </div>
+
+            {/* Floating Edit Avatar Button */}
+            <Link href="/discover/edit-profile" className="absolute top-6 right-6 bg-white/20 hover:bg-white/40 backdrop-blur-md p-3 rounded-2xl shadow-lg transition-colors border border-white/30">
+              <Camera className="w-5 h-5 text-white" />
+            </Link>
+          </div>
+
+          {/* Quick Stats Pill Bar */}
+          <div className="flex flex-wrap items-center justify-center gap-3 bg-card border border-border/50 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg">
+              <Shield className="w-4 h-4 text-primary" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">ID:</span>
+              <span className="text-sm font-bold text-foreground">{profile.profileId}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg">
+              <UserCircle className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-foreground capitalize">{profile.gender}</span>
+            </div>
+            {profile.maritalStatus && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg">
+                <Heart className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-foreground capitalize">{profile.maritalStatus}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Details & Gallery */}
+        <div className="lg:col-span-7 pt-4 lg:pt-0">
+          
+          {/* About Me */}
+          {profile.about && (
+            <div className="mb-12 relative">
+              <Sparkles className="w-6 h-6 text-primary mb-4" />
+              <p className="text-xl sm:text-2xl font-serif leading-relaxed text-foreground/90 font-medium">
+                "{profile.about}"
+              </p>
+            </div>
+          )}
+
+          {/* Luxury Gallery */}
+          {hasPhotos && profile.photos.length > 1 && (
+            <div className="mb-12">
+              <SectionHeading title="Gallery" icon={Camera} />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {profile.photos.slice(1).map((url: string, i: number) => (
+                  <div
+                    key={url}
+                    className="relative aspect-[4/5] rounded-3xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-500"
+                    onClick={() => setLightboxUrl(url)}
+                  >
+                    <img src={url} alt={`Photo ${i + 2}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Minimalist Details Lists */}
+          <div className="space-y-2">
+            <SectionHeading title="Basics & Lifestyle" icon={Heart} />
+            <div className="bg-card rounded-[2rem] border border-border/50 p-6 sm:p-8 shadow-sm">
+              <MinimalRow icon={Calendar} label="Date of Birth" value={dob} />
+              <MinimalRow icon={Ruler} label="Height" value={profile.height ? `${profile.height} cm` : null} />
+              <MinimalRow icon={UserCircle} label="Body Type" value={profile.bodyType} />
+              <MinimalRow icon={Star} label="Diet" value={profile.diet} />
+              <MinimalRow icon={Cigarette} label="Smoking" value={profile.smoking} />
+              <MinimalRow icon={Wine} label="Drinking" value={profile.drinking} />
+            </div>
+
+            <SectionHeading title="Career & Education" icon={Briefcase} />
+            <div className="bg-card rounded-[2rem] border border-border/50 p-6 sm:p-8 shadow-sm">
+              <MinimalRow icon={GraduationCap} label="Highest Education" value={profile.education} />
+              <MinimalRow icon={GraduationCap} label="Education Details" value={profile.educationDetail} />
+              <MinimalRow icon={Briefcase} label="Employed In" value={profile.employedIn} />
+              <MinimalRow icon={Briefcase} label="Profession" value={profile.profession} />
+              <MinimalRow icon={Briefcase} label="Company Name" value={profile.companyName} />
+              <MinimalRow icon={Briefcase} label="Annual Income" value={profile.annualIncome} />
+            </div>
+
+            <SectionHeading title="Background & Family" icon={Users} />
+            <div className="bg-card rounded-[2rem] border border-border/50 p-6 sm:p-8 shadow-sm">
+              <MinimalRow icon={Star} label="Religion" value={profile.religion} />
+              <MinimalRow icon={Users} label="Community" value={profile.community} />
+              <MinimalRow icon={Star} label="Mother Tongue" value={profile.motherTongue} />
+              <MinimalRow icon={Star} label="Caste" value={profile.caste} />
+              <MinimalRow icon={Home} label="Native Place" value={profile.nativePlace} />
+              <MinimalRow icon={Users} label="Father's Occupation" value={profile.fatherOccupation} />
+              <MinimalRow icon={Users} label="Mother's Occupation" value={profile.motherOccupation} />
+              <MinimalRow icon={Shield} label="Family Status" value={profile.familyStatus} />
+              <MinimalRow icon={Heart} label="Family Values" value={profile.familyValues} />
+            </div>
+          </div>
+          
+          <div className="mt-12 flex justify-end">
             <Link href="/discover/edit-profile">
-              <Button variant="outline" size="sm" className="rounded-xl font-semibold gap-1.5 shadow-sm">
-                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+              <Button className="rounded-full h-14 px-8 shadow-lg text-[15px] font-bold group">
+                <Edit3 className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" /> Manage Profile
               </Button>
             </Link>
           </div>
 
-          {/* Name & basics */}
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
-              <BadgeCheck className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground font-medium mt-0.5">
-              {profile.profession || "Professional"} {profile.companyName ? `at ${profile.companyName}` : ""}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 mt-2.5">
-              <Badge variant="outline" className="text-[11px] font-bold rounded-full">{profile.profileId}</Badge>
-              {age && <Badge variant="outline" className="text-[11px] font-bold rounded-full">{age} yrs</Badge>}
-              <Badge variant="outline" className="text-[11px] font-bold rounded-full">{profile.gender}</Badge>
-              {profile.maritalStatus && <Badge variant="outline" className="text-[11px] font-bold rounded-full">{profile.maritalStatus}</Badge>}
-            </div>
-          </div>
-
-          {/* About */}
-          {profile.about && (
-            <div className="mt-4 p-3.5 bg-muted/30 rounded-xl">
-              <p className="text-sm text-foreground/80 font-medium leading-relaxed">{profile.about}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Details Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        {/* Personal */}
-        <Section title="Personal Details">
-          <InfoRow icon={Calendar} label="Date of Birth" value={dob} />
-          <InfoRow icon={Ruler} label="Height" value={profile.height ? `${profile.height} cm` : null} />
-          <InfoRow icon={Heart} label="Body Type" value={profile.bodyType} />
-          <InfoRow icon={Star} label="Diet" value={profile.diet} />
-        </Section>
-
-        {/* Religion */}
-        <Section title="Religion & Community">
-          <InfoRow icon={Star} label="Religion" value={profile.religion} />
-          <InfoRow icon={Users} label="Community" value={profile.community} />
-          <InfoRow icon={Star} label="Mother Tongue" value={profile.motherTongue} />
-          <InfoRow icon={Star} label="Caste" value={profile.caste} />
-          <InfoRow icon={Star} label="Gothram" value={profile.gothram} />
-          <InfoRow icon={Star} label="Manglik" value={profile.manglik} />
-        </Section>
-
-        {/* Career */}
-        <Section title="Education & Career">
-          <InfoRow icon={GraduationCap} label="Education" value={profile.education} />
-          <InfoRow icon={GraduationCap} label="Details" value={profile.educationDetail} />
-          <InfoRow icon={Briefcase} label="Employed In" value={profile.employedIn} />
-          <InfoRow icon={Briefcase} label="Profession" value={profile.profession} />
-          <InfoRow icon={Briefcase} label="Company" value={profile.companyName} />
-          <InfoRow icon={Briefcase} label="Annual Income" value={profile.annualIncome} />
-        </Section>
-
-        {/* Location */}
-        <Section title="Location & Lifestyle">
-          <InfoRow icon={MapPin} label="City" value={profile.city} />
-          <InfoRow icon={MapPin} label="State" value={profile.state} />
-          <InfoRow icon={MapPin} label="Country" value={profile.country} />
-          <InfoRow icon={Home} label="Native Place" value={profile.nativePlace} />
-          <InfoRow icon={Cigarette} label="Smoking" value={profile.smoking} />
-          <InfoRow icon={Wine} label="Drinking" value={profile.drinking} />
-        </Section>
-
-        {/* Family */}
-        <Section title="Family Details">
-          <InfoRow icon={Users} label="Father's Occupation" value={profile.fatherOccupation} />
-          <InfoRow icon={Users} label="Mother's Occupation" value={profile.motherOccupation} />
-          <InfoRow icon={Users} label="Brothers" value={profile.brothers != null ? `${profile.brothers} (${profile.brothersMarried || 0} married)` : null} />
-          <InfoRow icon={Users} label="Sisters" value={profile.sisters != null ? `${profile.sisters} (${profile.sistersMarried || 0} married)` : null} />
-          <InfoRow icon={Home} label="Family Type" value={profile.familyType} />
-          <InfoRow icon={Shield} label="Family Status" value={profile.familyStatus} />
-          <InfoRow icon={Heart} label="Family Values" value={profile.familyValues} />
-        </Section>
-
-        {/* Photos placeholder */}
-        <Section title="Photos">
-          <div className="py-4">
-            <div className="grid grid-cols-3 gap-2.5">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="aspect-square rounded-xl border-2 border-dashed border-border bg-muted/20 flex items-center justify-center">
-                  <UserCircle className="w-8 h-8 text-muted-foreground/20" />
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-muted-foreground font-medium mt-2">Photo upload coming soon</p>
-          </div>
-        </Section>
+        </div>
       </div>
 
-      {/* Bottom Edit CTA */}
-      <div className="flex justify-center pt-2 pb-6">
-        <Link href="/discover/edit-profile">
-          <Button className="rounded-xl font-semibold px-8 shadow-md gap-2 active:scale-[0.98] transition-all">
-            <Edit3 className="w-4 h-4" /> Edit Full Profile <ChevronRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      </div>
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <div className="relative max-w-5xl max-h-[90vh] w-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightboxUrl}
+              alt="Full size preview"
+              className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl select-none"
+            />
+            <button
+              className="absolute top-4 right-4 sm:-top-4 sm:-right-12 w-12 h-12 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 group"
+              onClick={() => setLightboxUrl(null)}
+            >
+              <X className="w-6 h-6 text-white group-hover:rotate-90 transition-transform duration-300" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
